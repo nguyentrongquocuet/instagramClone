@@ -6,7 +6,8 @@
 /out-tsc
 # Only exists if Bazel was run
 /bazel-out
-
+#/Quoc
+/backend/images/*.*
 # dependencies
 /node_modules
 
