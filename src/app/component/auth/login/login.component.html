@@ -1,0 +1,43 @@
+<div class="container--full main">
+  <div class="demo">
+    <img src="assets/1.jpg" class="image" alt="" />
+    <img src="assets/2.jpg" class="image" alt="" />
+    <img src="assets/3.jpg" class="image" alt="" />
+    <img src="assets/4.jpg" class="image" alt="" />
+  </div>
+  <div class="login">
+    <form class="login-form border" [formGroup]="form">
+      <div class="logo">
+        <img
+          src="https://www.vectorlogo.zone/logos/instagram/instagram-wordmark.svg"
+          alt=""
+        />
+      </div>
+      <div class="form-field border">
+        <input
+          formControlName="username"
+          class="input"
+          type="text"
+          (input)="inputEffect()"
+        />
+        <p class="playholder">Số điện thoại, tên người dùng hoặc email</p>
+      </div>
+      <div class="form-field border">
+        <input
+          formControlName="password"
+          class="input"
+          type="text"
+          (input)="inputEffect()"
+        />
+        <p class="playholder">Mật khẩu</p>
+      </div>
+      <div class="form-field border">
+        <button [disabled]="!canLogin()" (click)="login()">Đăng nhập</button>
+      </div>
+      <p><a href="">Quên mật khẩu</a></p>
+    </form>
+    <div class="register border">
+      <span>Bạn không có tài khoản? <a routerLink="/signup">Đăng ký</a></span>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,133 @@
+:host {
+  display: block;
+  position: relative;
+  z-index: 9;
+}
+
+.field:not(.media) {
+  width: 100%;
+  // padding: 0 1rem;
+}
+
+.user-detail {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  min-height: 54px;
+}
+.action {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.7rem;
+}
+
+.media {
+  width: 100%;
+}
+.media img {
+  max-width: 100%;
+  width: 100%;
+  visibility: hidden;
+}
+.action--reaction {
+  display: flex;
+}
+
+.action i {
+  font-size: 22px;
+  // padding: 0.25rem 0.5rem;
+  margin: 0.5rem 0.5rem 0 0;
+}
+.action i.fas.fa-heart {
+  color: #ed4956;
+}
+.likedlist {
+  margin-bottom: 1rem;
+}
+.comment--list {
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #f9a1f9;
+}
+.comment--input {
+  height: 4rem;
+  // padding: 0.5rem;
+  display: flex;
+  align-items: center;
+}
+.input-comment {
+  background: transparent;
+  width: 100%;
+  height: 60%;
+  outline: none;
+  border: none;
+}
+
+.comment--input button:disabled {
+  cursor: default;
+  border: none;
+  outline: none;
+  color: #40c8d7;
+}
+.comment--input button {
+  cursor: pointer;
+  border: none;
+  outline: none;
+  color: #2197f6;
+  background: transparent;
+}
+.view-liked {
+  display: flex;
+  padding: 1rem;
+  position: fixed;
+  z-index: 1;
+  left: 30vw;
+  top: 10vh;
+  flex-direction: column;
+  max-height: 80vh;
+  width: 40vw;
+  z-index: 1;
+  border-radius: 1rem;
+  box-shadow: 0px 0px 5px #dcd1e7;
+  background-color: #fafafa;
+}
+
+.view-liked--header {
+  display: flex;
+  justify-content: space-between;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #2197f6;
+}
+.liked-list {
+  width: 100%;
+  overflow-y: scroll;
+  padding: 1rem;
+}
+.fetching {
+  position: fixed;
+  left: calc(50vw - 32px);
+  top: 6vh;
+  width: 60px;
+  height: 60px;
+  background-color: transparent;
+  transition: 0.25s;
+  border-top: 6px solid #da4682;
+  border-left: 6px solid #e8416d;
+  border-bottom: 6px solid #e83543;
+  border-right: 6px solid #ef2e3d;
+  border-radius: 50%;
+  box-shadow: 0px 0px 10px 2px #ef2e3d;
+  animation-name: fetching;
+  animation-duration: 0.2s;
+  animation-iteration-count: infinite;
+  animation-timing-function: linear;
+  animation-delay: 0.25s;
+  animation-fill-mode: backwards;
+}
+@keyframes fetching {
+  from {
+  }
+  to {
+    transform-origin: center center;
+    transform: rotateZ(360deg);
+  }
+}

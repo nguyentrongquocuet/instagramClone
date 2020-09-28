@@ -1,0 +1,14 @@
+✔ beauty design @done(20-09-26 10:32)
+✔ localStorage authorization @done(20-09-26 10:32)
+✔ signup with avatar @done(20-09-26 10:32)
+☐ Add router guard
+✔ Link userData to ✔header, ✔newfeed, ✔sidenav @done(20-09-26 10:32)
+✔ Create post model @done(20-09-27 01:40)
+✔ Upload Post @started(20-09-26 12:46) @done(20-09-26 12:46) @lasted(20s)
+✔ Fetch post @done(20-09-27 01:40)
+☐ Comment
+✔ RealtimeDatabase @done(20-09-28 19:47)
+✔ like @done(20-09-28 12:15)
+☐ Follow
+☐ Chat
+☐ Share

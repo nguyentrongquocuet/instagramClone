@@ -1,0 +1,36 @@
+.container--full {
+  width: 100%;
+  display: flex;
+  background-color: #ffffff;
+  height: 1000px;
+}
+
+.messages {
+  min-width: 349px;
+  border: 1px solid #f9a1f1;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 60px;
+  border-bottom: 1px solid #f9a1f1;
+}
+.span-direct {
+  width: 245px;
+  text-align: center;
+  justify-self: center;
+  font-weight: bold;
+}
+.edit-button {
+  font-size: 1.5rem;
+  font-weight: normal;
+  justify-self: flex-end;
+}
+.suggest {
+  width: calc(100% - 349px);
+  border: 1px solid #f9a1f1;
+  border-left: none;
+}

@@ -1,0 +1,48 @@
+<div class="border container--full">
+  <div class="form">
+    <form [formGroup]="form">
+      <div class="field title">
+        <textarea
+          name=""
+          id="title"
+          formControlName="title"
+          cols="30"
+          rows="5"
+          placeholder="Bạn đang nghĩ gì vậy?"
+        ></textarea>
+      </div>
+      <div
+        class="field preview"
+        *ngIf="form.get('image').valid && previewUrl !== ''"
+      >
+        <img [src]="previewUrl" alt="" />
+      </div>
+      <div class="field tools">
+        <div>
+          <span>Thêm vào bài viết</span>
+        </div>
+        <div class="tools--list">
+          <i (click)="filePicker.click()" class="image fa fa-photo-video"></i>
+        </div>
+        <input
+          (click)="resetInput($event)"
+          (change)="onImagePicked($event)"
+          type="file"
+          id="file"
+          style="display: none"
+          #filePicker
+        />
+      </div>
+
+      <br />
+      <button
+        (click)="onAddPost()"
+        class="field submit"
+        type="submit"
+        [disabled]="form.invalid"
+      >
+        Đăng
+      </button>
+    </form>
+  </div>
+</div>

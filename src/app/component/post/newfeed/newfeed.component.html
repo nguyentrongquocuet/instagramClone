@@ -1,0 +1,94 @@
+<div (window:scroll)="scroll()" class="newfeed" style="width: 100%">
+  <div class="fetching" *ngIf="fetching"></div>
+  <div *ngFor="let post of posts; index as i" class="border container--full">
+    <div class="field user-detail">
+      <div class="avatar">
+        <img class="avatar--small" [src]="post.creator.avatarPath" alt="" />
+      </div>
+      <a
+        ><span>{{ post.creator.username }}</span></a
+      >
+    </div>
+    <div
+      (dblclick)="like(post)"
+      *ngIf="post.imagePath"
+      class="field media"
+      [style.background]="'url(' + post.imagePath + ')'"
+      [style.backgroundSize]="'cover'"
+    >
+      <img [src]="post.imagePath" [alt]="post.title" />
+    </div>
+    <div class="field action">
+      <div class="action--reaction">
+        <i
+          (click)="like(post)"
+          [ngClass]="post.isLiked ? 'fas fa-heart' : 'far fa-heart'"
+        ></i>
+        <i class="far fa-comment"></i>
+        <i class="far fa-paper-plane"></i>
+      </div>
+      <div class="action--share">
+        <i class="far fa-bookmark"></i>
+      </div>
+    </div>
+    <div class="field post-info">
+      <div class="likedlist">
+        <!-- <a>gwyn.ld</a> và <a>những người khác</a> -->
+        <a *ngIf="post.isLiked" (click)="getLikedUserList(post)">
+          Bạn
+          <span *ngIf="post.liked > 1">
+            và <a>{{ post.liked - 1 }} người khác</a>
+          </span>
+        </a>
+        <p (click)="getLikedUserList(post)" *ngIf="!post.isLiked">
+          <a> {{ post.liked }} người đã thích</a>
+        </p>
+      </div>
+      <div class="post-title">
+        <a>{{ post.creator.username }}</a>
+        <span>
+          {{ post.title }}
+        </span>
+      </div>
+    </div>
+    <div class="field comment--list">
+      <div class="comment">
+        <a>shuzzi.h</a>
+        <span> Anh không được mơ về 1 người nào ngoài em ... </span>
+      </div>
+    </div>
+    <div class="field comment--input">
+      <input
+        #inputcomment
+        class="input-comment"
+        type="text"
+        placeholder="Nhập bình luận..."
+        (input)="doNothing($event)"
+      />
+      <button [disabled]="!inputcomment.value">Đăng</button>
+    </div>
+  </div>
+</div>
+<div *ngIf="likedUserData" class="view-liked">
+  <div class="view-liked--header">
+    <p>Danh sách người yêu thích bài viết</p>
+
+    <i (click)="likedUserData = null" class="fa fa-times-circle"></i>
+  </div>
+  <div class="liked-list">
+    <div *ngFor="let user of likedUserData">
+      <div class="recommend__field">
+        <div class="user--info">
+          <img class="avatar--small" [src]="user.avatarPath" alt="" />
+          <div class="username">
+            <a
+              ><span>{{ user.username }}</span></a
+            >
+            <span>{{ user.name }}</span>
+          </div>
+        </div>
+        <a><span>Theo doi</span></a>
+      </div>
+    </div>
+  </div>
+</div>

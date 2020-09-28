@@ -1,0 +1,71 @@
+<div class="main container">
+  <form class="signup-form" [formGroup]="form">
+    <div class="logo">
+      <img
+        src="https://www.vectorlogo.zone/logos/instagram/instagram-wordmark.svg"
+        alt=""
+      />
+    </div>
+    <div class="form-field">
+      <input
+        formControlName="username"
+        class="input"
+        type="text"
+        (input)="inputEffect()"
+      />
+      <p class="playholder">Số điện thoại, tên người dùng hoặc email</p>
+    </div>
+    <div class="imagepicker">
+      <button (click)="imagePicker.click()">Avatar</button>
+      <input
+        style="display: none"
+        type="file"
+        (click)="resetInput($event)"
+        (change)="onPickedImage($event)"
+        #imagePicker
+      />
+      <div class="preview">
+        <img
+          *ngIf="form.get('image').valid"
+          class="avatar--medium"
+          [src]="[imagePreviewImage]"
+          alt=""
+        />
+      </div>
+    </div>
+    <div class="form-field">
+      <input
+        formControlName="name"
+        class="input"
+        type="text"
+        (input)="inputEffect()"
+      />
+      <p class="playholder">Tên đầy đủ</p>
+    </div>
+    <div class="form-field">
+      <input
+        formControlName="password"
+        class="input"
+        type="text"
+        (input)="inputEffect()"
+      />
+      <p class="playholder">Mật khẩu</p>
+    </div>
+    <div class="form-field">
+      <input
+        formControlName="repassword"
+        class="input"
+        type="text"
+        (input)="inputEffect()"
+      />
+      <p class="playholder">Mật lại khẩu</p>
+    </div>
+    <div class="form-field">
+      <button [disabled]="canSignup()" (click)="signup()">Đăng ký</button>
+    </div>
+    <p>
+      Bằng cách đăng ký, bạn đồng ý với Điều khoản, Chính sách dữ liệu và Chính
+      sách cookie của chúng tôi.
+    </p>
+  </form>
+</div>
