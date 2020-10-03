@@ -1,6 +1,5 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const { resolve } = require("path");
 const { salt } = require("../config/bcrypt-salt");
 const followerListSchema = require("../schema/followerList-schema");
 const followingListSchema = require("../schema/followingList-schema");
@@ -122,7 +121,12 @@ exports.getUserInfo = async (userId) => {
       .findById(userId)
       .then((foundUser) => {
         if (foundUser) {
-          resolve(foundUser);
+          resolve({
+            username: foundUser.username,
+            name: foundUser.name,
+            userId: foundUser._id,
+            avatarPath: foundUser.avatarPath,
+          });
         } else {
           reject("user not found");
         }

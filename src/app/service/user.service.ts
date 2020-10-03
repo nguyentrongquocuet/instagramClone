@@ -5,6 +5,7 @@ import { Subject } from 'rxjs';
 import { UserFullData } from '../model/userFullDataModel';
 import { url } from '../../config/serverUrl';
 import { UserData } from '../model/userDataModel';
+import { SocketService } from './socket.service';
 @Injectable({
   providedIn: 'root',
 })

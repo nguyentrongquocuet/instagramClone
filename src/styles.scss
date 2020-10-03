@@ -21,6 +21,32 @@ body {
   border-radius: 4px;
   padding: 0 20px;
 }
+.welcome {
+  display: block;
+  position: fixed;
+  z-index: 999;
+  width: 100vw;
+  height: 100vh;
+  position: absolute;
+  animation-name: welcome;
+  animation-duration: 1s;
+  animation-iteration-count: 1;
+  animation-fill-mode: forwards;
+  background-image: url(/assets/logo.png);
+  background-size: cover;
+  background-position: -32px -64px;
+}
+
+@keyframes welcome {
+  0% {
+    background-color: #fafafa;
+  }
+  100% {
+    background-color: #fafafa;
+    visibility: hidden;
+    display: none;
+  }
+}
 .container--full {
   width: 100%;
   margin: 0 auto;
@@ -70,4 +96,48 @@ a {
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
+}
+.form-field {
+  width: 100%;
+  background: transparent;
+  height: 2.5rem;
+  max-height: 2.5rem;
+  position: relative;
+  margin-bottom: 2rem;
+  border: 1px solid #f9a1f1;
+  border-radius: 4px;
+  color: #d0ab8e;
+}
+.input {
+  display: block;
+  position: absolute;
+  width: 100%;
+  line-height: 2.5rem;
+  padding: 0 0.5rem;
+  font-size: 0.8rem;
+  background: transparent;
+  border: none;
+  outline: none;
+  transition: 0.1s;
+  color: #262626;
+}
+.playholder {
+  font-size: 11px;
+  display: block;
+  position: absolute;
+  transform: translateY(50%);
+  margin-left: 0.5rem;
+  transition: 0.25s;
+  z-index: -1;
+}
+
+.inputFocus {
+  background: transparent;
+  line-height: 0.8rem;
+  padding: 1rem 0 0.25rem 0.25rem;
+}
+.effect {
+  transform: translateY(0%);
+  font-size: 10px;
+  z-index: 1;
 }

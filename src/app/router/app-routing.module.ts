@@ -1,5 +1,6 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
+import { AuthGuard } from '../component/auth/auth.guard';
 import { MainComponent } from '../component/main/main.component';
 import { MessageComponent } from '../component/message/message.component';
 const routes: Routes = [
@@ -7,6 +8,7 @@ const routes: Routes = [
     path: '',
     component: MainComponent,
     pathMatch: 'full',
+    canActivate: [AuthGuard],
   },
   {
     path: 'v1',
@@ -25,5 +27,6 @@ const routes: Routes = [
 @NgModule({
   imports: [RouterModule.forRoot(routes)],
   exports: [RouterModule],
+  providers: [AuthGuard],
 })
 export class AppRoutingModule {}

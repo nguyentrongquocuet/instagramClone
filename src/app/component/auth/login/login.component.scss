@@ -44,47 +44,7 @@
 .logo img {
   max-width: 175px;
 }
-.form-field {
-  width: 100%;
-  height: 2.5rem;
-  max-height: 2.5rem;
-  position: relative;
-  margin-bottom: 2rem;
-  border: 1px solid #f9a1f1;
-  border-radius: 4px;
-  color: #d0ab8e;
-}
-.input {
-  display: block;
-  position: absolute;
-  width: 100%;
-  line-height: 2.5rem;
-  padding: 0 0.5rem;
-  font-size: 0.8rem;
-  background: transparent;
-  border: none;
-  outline: none;
-  transition: 0.1s;
-  color: #262626;
-}
-.playholder {
-  font-size: 11px;
-  display: block;
-  position: absolute;
-  transform: translateY(50%);
-  margin-left: 0.5rem;
-  transition: 0.25s;
-  z-index: -1;
-}
 
-.inputFocus {
-  line-height: 0.8rem;
-  padding: 1rem 0 0.25rem 0.25rem;
-}
-.effect {
-  transform: translateY(0%);
-  font-size: 10px;
-}
 button {
   width: 100%;
   height: 100%;

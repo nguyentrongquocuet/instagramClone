@@ -1,10 +1,12 @@
-const commentListSchema = require("../schema/commentList-schema");
+const SocketIO = require("../config/socketconfig");
 const postSchema = require("../schema/post-schema");
-const reactionListSchema = require("../schema/reactionList-schema");
 const userSchema = require("../schema/user-schema");
 const userController = require("./user-controller");
 exports.addPost = (req, res) => {
   const io = req.app.get("io");
+  const userId = req.decodedToken.token.userId;
+  const socketId = SocketIO.socketId.get(userId);
+  const socket = req.app.get("io").sockets.connected[socketId];
   const file = req.file;
   let imagePath;
   if (file) {
@@ -17,17 +19,26 @@ exports.addPost = (req, res) => {
     title: req.body.title,
     imagePath: imagePath,
   });
-  createReactionList(post)
-    .then((out) => {
-      io.emit("postchange", { operation: "add", postId: post._id });
-      res.status(200).json({ ...out });
-    })
-    .catch((err) => {
-      console.log(err);
+  post.save().then(async (savedPost) => {
+    const creatorInfo = await userController.getUserInfo(savedPost.creatorId);
+    const room = `post-${savedPost._id}`;
+    socket.join(room);
+    console.log(savedPost, creatorInfo); // savedPost= {...savedPost, creator: {...creatorInfo}};
+    io.emit("post", {
+      operation: "addpost",
+      post: {
+        ...savedPost._doc,
+        creator: { ...creatorInfo },
+      },
     });
+    res.status(200).json({ message: "saved" });
+  });
 };
 exports.getPost = (req, res) => {
+  console.log("getting post");
   const userId = req.decodedToken.token.userId;
+  const socketId = SocketIO.socketId.get(userId);
+  const socket = req.app.get("io").sockets.connected[socketId];
   const part = parseInt(req.query.part);
   const postPerPart = parseInt(req.query.postPerPart);
   postSchema
@@ -37,149 +48,189 @@ exports.getPost = (req, res) => {
     .sort({ _id: -1 })
     .then(async (foundPosts) => {
       let totalSize = await postSchema.countDocuments();
-      let transferredPost = [];
       for (let post of foundPosts) {
-        const liked = await getLiked(post, userId);
+        const room = `post-${post._id}`;
+        socket.join(room);
         const creatorInfo = await userController.getUserInfo(post.creatorId);
-        transferredPost.push({
-          ...post._doc,
-          ...liked,
-          creator: creatorInfo,
+        let commentList = [];
+        for (let comment of post.commentList) {
+          const commentCreatorInfo = await userController.getUserInfo(
+            comment.userId
+          );
+          commentList.push({
+            ...comment,
+            userData: commentCreatorInfo,
+          });
+        }
+
+        socket.emit("post", {
+          totalSize: totalSize,
+          operation: "getonepost",
+          post: { ...post._doc, creator: creatorInfo, commentList },
         });
       }
-      res.status(200).json({ posts: [...transferredPost], totalSize });
+      res.status(200).json({ totalSize });
     });
 };
 exports.getPostById = (req, res) => {
-  const userId = req.decodedToken.token.userId;
+  console.log(req.query.commentLimit);
   postSchema.findById(req.params.id).then(async (foundPost) => {
     if (foundPost) {
-      const liked = await getLiked(foundPost, userId);
       const creatorInfo = await userController.getUserInfo(foundPost.creatorId);
       res.status(200).json({
         ...foundPost._doc,
-        ...liked,
         creator: creatorInfo,
       });
     }
   });
 };
-exports.addLike = (req, res) => {
+exports.addLike = async (req, res) => {
   const io = req.app.get("io");
+  const room = `post-${req.body.postId}`;
   const userId = req.decodedToken.token.userId;
-  reactionListSchema
-    .findOneAndUpdate(
-      { postId: req.body.postId, reactionList: userId },
+  const postId = req.body.postId;
+  try {
+    let postAfterUpdate = await postSchema.findOneAndUpdate(
+      { _id: postId, likeList: userId },
       {
         $pull: {
-          reactionList: userId,
+          likeList: userId,
+        },
+        $inc: { likecount: -1 },
+      },
+      { new: true }
+    );
+    if (!postAfterUpdate) {
+      postAfterUpdate = await postSchema.findByIdAndUpdate(
+        postId,
+        {
+          $push: {
+            likeList: userId,
+          },
+          $inc: { likecount: 1 },
+        },
+        { new: true }
+      );
+      io.to(room).emit("post", {
+        operation: "addlike",
+        postId: postId,
+        userId: userId,
+      });
+    } else {
+      io.to(room).emit("post", {
+        operation: "unlike",
+        postId: postId,
+        userId: userId,
+      });
+    }
+    console.log(postAfterUpdate);
+
+    res.status(200).json("liked");
+  } catch (error) {
+    console.log("ERROR FROM ADD LIKE", error);
+  }
+};
+exports.addComment = async (req, res) => {
+  const io = req.app.get("io");
+  const postId = req.body.postId;
+  const room = `post-${postId}`;
+  const userId = req.decodedToken.token.userId;
+  const comment = req.body.comment.trim();
+  try {
+    await postSchema.findByIdAndUpdate(
+      postId,
+      {
+        $push: {
+          commentList: {
+            userId: userId,
+            comment: comment,
+          },
         },
         $inc: {
-          count: -1,
+          commentcount: 1,
         },
+      },
+      {
+        new: true,
       }
-    )
-    .then((foundList) => {
-      if (!foundList) {
-        reactionListSchema
-          .findOneAndUpdate(
-            { postId: req.body.postId },
-            {
-              $push: {
-                reactionList: userId,
-              },
-              $inc: {
-                count: 1,
-              },
-            }
-          )
-          .then((foundList) => {
-            io.emit("postchange", {
-              operation: "update",
-              postId: foundList.postId,
-            });
-
-            return res.status(200).json({ ...foundList });
-          })
-          .catch((err) => {
-            return res.status(401).json({ error: err });
-          });
-      } else {
-        io.emit("postchange", {
-          operation: "update",
-          postId: foundList.postId,
-        });
-
-        return res.status(200).json({ ...foundList });
-      }
-    })
-    .catch((err) => {
-      console.log(err);
-      return res.status(401).json({ error: err });
+    );
+    const userData = await userController.getUserInfo(userId);
+    io.to(room).emit("post", {
+      operation: "addcomment",
+      postId: postId,
+      comment: comment,
+      userId: userId,
+      userData: userData,
     });
+    res.status(200).json("added comment");
+  } catch (error) {
+    console.log("ERROR FROM ADD COMMENT", error);
+  }
 };
 
-exports.getLikedList = (req, res) => {
-  getLikedUserList(res, req.params.id);
-};
-function createReactionList(post) {
-  return new Promise((resolve, reject) => {
-    post.save().then((savedPost) => {
-      Promise.all([
-        reactionListSchema.create({
-          creatorId: savedPost.creatorId,
-          postId: savedPost._id,
-        }),
-        commentListSchema.create({
-          creatorId: savedPost.creatorId,
-          postId: savedPost._id,
-        }),
-      ])
-        .then(() => {
-          resolve(savedPost);
-        })
-        .catch((err) => reject(err));
-    });
-  });
-}
-
-function getLiked(post, userId) {
-  return new Promise((resolve, reject) => {
-    reactionListSchema
-      .findOne({ postId: post._id })
-      .then((foundPost) => {
-        if (foundPost) {
-          resolve({
-            isLiked: foundPost.reactionList.includes(userId),
-            liked: foundPost.count,
-          });
-        }
-      })
-      .catch((err) => reject(err));
-  });
-}
-
-async function getLikedUserList(res, postId) {
+exports.getLikedList = async (req, res) => {
+  console.log(req.params);
+  const userId = req.decodedToken.token.userId;
+  const io = req.app.get("io");
+  const socketId = SocketIO.socketId.get(userId);
+  const socket = io.sockets.connected[socketId];
   let output = [];
   try {
-    const likedListByUserId = await reactionListSchema.findOne({
-      postId: postId,
-    });
-    for (let userId of likedListByUserId.reactionList) {
-      try {
-        let user = await userSchema.findById(userId);
-        output.push({
-          userId: user._id,
-          username: user.username,
-          name: user.name,
-          avatarPath: user.avatarPath,
-        });
-      } catch (error) {
-        return res.status(200).json("server error on load likedList");
-      }
+    const foundPost = await postSchema.findById(req.params.id);
+    console.log("getting likelist");
+    for (let userId of foundPost.likeList) {
+      let userData = await userController.getUserInfo(userId);
+      socket.emit("post", {
+        operation: "getlike",
+        postId: foundPost._id,
+        userData,
+      });
     }
     res.status(200).json([...output]);
   } catch (error) {
     return res.status(200).json("server error on load likedList");
+  }
+};
+exports.getFullComment = (req, res) => {
+  getCommentList(req.params.id, -1).then((fullComment) => {
+    console.log("fullcomment", fullComment);
+    res.status(200).json({ message: "getted full comments", fullComment });
+  });
+};
+
+async function getLikedUserList(res, postId) {}
+async function getCommentList(postId, count) {
+  console.log("count laf", count);
+  let output = [];
+
+  try {
+    const commentDoc = await commentListSchema.findOne({
+      postId: postId,
+    });
+    let listSize = commentDoc.commentList.length;
+    console.log(listSize);
+    let from;
+    if (count < 0 || count > listSize) {
+      from = 0;
+    } else {
+      from = listSize - count;
+    }
+    console.log(listSize);
+    let comments = commentDoc.commentList;
+    for (let i = from; i < listSize; i++) {
+      let user = await userSchema.findById(comments[i].userId);
+      output.push({
+        userData: {
+          userId: user._id,
+          username: user.username,
+          name: user.name,
+          avatarPath: user.avatarPath,
+        },
+        comment: comments[i].comment,
+      });
+    }
+    return { totalComment: listSize, list: output };
+  } catch (error) {
+    console.log("ERROR IN GET COMMENT LIST", error);
   }
 }

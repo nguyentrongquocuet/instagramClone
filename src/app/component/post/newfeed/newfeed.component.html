@@ -34,14 +34,14 @@
     <div class="field post-info">
       <div class="likedlist">
         <!-- <a>gwyn.ld</a> và <a>những người khác</a> -->
-        <a *ngIf="post.isLiked" (click)="getLikedUserList(post)">
+        <a *ngIf="post.isLiked" (click)="getLikedUserList(post._id)">
           Bạn
-          <span *ngIf="post.liked > 1">
-            và <a>{{ post.liked - 1 }} người khác</a>
+          <span *ngIf="post.likecount > 1">
+            và <a>{{ post.likecount - 1 }} người khác</a>
           </span>
         </a>
-        <p (click)="getLikedUserList(post)" *ngIf="!post.isLiked">
-          <a> {{ post.liked }} người đã thích</a>
+        <p (click)="getLikedUserList(post._id)" *ngIf="!post.isLiked">
+          <a> {{ post.likecount }} người đã thích</a>
         </p>
       </div>
       <div class="post-title">
@@ -51,43 +51,173 @@
         </span>
       </div>
     </div>
+    <hr />
     <div class="field comment--list">
-      <div class="comment">
-        <a>shuzzi.h</a>
-        <span> Anh không được mơ về 1 người nào ngoài em ... </span>
+      <div class="" *ngIf="post.commentcount > 2">
+        <a (click)="getPostWithFullComment(post)"
+          >Xem thêm {{ post.commentcount - 2 }} bình luận</a
+        >
+      </div>
+      <div class="comment" *ngFor="let comment of post.commentList">
+        <a>{{ comment.userData.username || "loadingusername" }}</a>
+        <span> {{ comment.comment }} </span>
       </div>
     </div>
     <div class="field comment--input">
       <input
         #inputcomment
+        ngModel
         class="input-comment"
         type="text"
         placeholder="Nhập bình luận..."
-        (input)="doNothing($event)"
+        (keyup)="typing($event)"
       />
-      <button [disabled]="!inputcomment.value">Đăng</button>
+      <button
+        (click)="addComment(post, inputcomment)"
+        [disabled]="!inputcomment.value"
+      >
+        Đăng
+      </button>
     </div>
   </div>
 </div>
-<div *ngIf="likedUserData" class="view-liked">
-  <div class="view-liked--header">
-    <p>Danh sách người yêu thích bài viết</p>
-
-    <i (click)="likedUserData = null" class="fa fa-times-circle"></i>
+<!-- fullpost -->
+<!-- //FIXME: ADD FULL POST PREVIEW -->
+<div *ngIf="postWithFullComment" class="toggle-wrapper">
+  <div
+    (click)="postWithFullComment = null"
+    class="cancel-view"
+    style="width: fit-content; right: 4vw"
+  >
+    <i style="font-size: 2rem" class="search-cancel fa fa-times-circle"></i>
   </div>
-  <div class="liked-list">
-    <div *ngFor="let user of likedUserData">
-      <div class="recommend__field">
-        <div class="user--info">
-          <img class="avatar--small" [src]="user.avatarPath" alt="" />
-          <div class="username">
+  <div class="newfeed full-comment">
+    <div class="border container--full flex-column">
+      <div
+        (dblclick)="like(postWithFullComment)"
+        *ngIf="postWithFullComment.imagePath"
+        class="field media"
+        [style.background]="'url(' + postWithFullComment.imagePath + ')'"
+        [style.backgroundSize]="'cover'"
+      >
+        <img
+          [src]="postWithFullComment.imagePath"
+          [alt]="postWithFullComment.title"
+        />
+      </div>
+      <div class="full-comment-side">
+        <div class="field user-detail">
+          <div class="avatar">
+            <img
+              class="avatar--small"
+              [src]="postWithFullComment.creator.avatarPath"
+              alt=""
+            />
+          </div>
+          <a
+            ><span>{{ postWithFullComment.creator.username }}</span></a
+          >
+        </div>
+        <hr />
+        <div class="field post-info">
+          <div class="likedlist">
+            <!-- <a>gwyn.ld</a> và <a>những người khác</a> -->
             <a
-              ><span>{{ user.username }}</span></a
+              *ngIf="postWithFullComment.isLiked"
+              (click)="getLikedUserList(postWithFullComment)"
             >
-            <span>{{ user.name }}</span>
+              Bạn
+              <span *ngIf="postWithFullComment.likecount > 1">
+                và <a>{{ postWithFullComment.likecount - 1 }} người khác</a>
+              </span>
+            </a>
+            <p
+              (click)="getLikedUserList(postWithFullComment)"
+              *ngIf="!postWithFullComment.isLiked"
+            >
+              <a> {{ postWithFullComment.likecount }} người đã thích</a>
+            </p>
+          </div>
+          <div class="post-title">
+            <a>{{ postWithFullComment.creator.username }}</a>
+            <span>
+              {{ postWithFullComment.title }}
+            </span>
           </div>
         </div>
-        <a><span>Theo doi</span></a>
+        <div class="field comment--list">
+          <div
+            class="comment"
+            *ngFor="let comment of postWithFullComment.commentList"
+          >
+            <img
+              class="avatar--small"
+              [src]="comment.userData.avatarPath"
+              alt=""
+            />
+            <a>{{ comment.userData.username }}</a>
+            <span> {{ comment.comment }} </span>
+          </div>
+        </div>
+        <div class="field action">
+          <div class="action--reaction">
+            <i
+              (click)="like(postWithFullComment)"
+              [ngClass]="
+                postWithFullComment.isLiked ? 'fas fa-heart' : 'far fa-heart'
+              "
+            ></i>
+            <i class="far fa-comment"></i>
+            <i class="far fa-paper-plane"></i>
+          </div>
+          <div class="action--share">
+            <i class="far fa-bookmark"></i>
+          </div>
+        </div>
+
+        <hr />
+
+        <div class="field comment--input">
+          <input
+            #inputcomment
+            ngModel
+            class="input-comment"
+            type="text"
+            placeholder="Nhập bình luận..."
+          />
+          <button
+            (click)="addComment(postWithFullComment, inputcomment)"
+            [disabled]="!inputcomment.value"
+          >
+            Đăng
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- View who liked -->
+<div class="toggle-wrapper" *ngIf="likedUserData">
+  <div class="view-liked">
+    <div class="view-liked--header">
+      <p>Danh sách người yêu thích bài viết</p>
+
+      <i (click)="likedUserData = null" class="fa fa-times-circle"></i>
+    </div>
+    <div class="liked-list">
+      <div *ngFor="let user of likedUserData.userData">
+        <div class="recommend__field">
+          <div class="user--info">
+            <img class="avatar--small" [src]="user.avatarPath" alt="" />
+            <div class="username">
+              <a
+                ><span>{{ user.username }}</span></a
+              >
+              <span>{{ user.name }}</span>
+            </div>
+          </div>
+          <a><span>Theo doi</span></a>
+        </div>
       </div>
     </div>
   </div>

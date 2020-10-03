@@ -11,6 +11,7 @@ export class LoginComponent implements OnInit {
   form: FormGroup;
   constructor(private userService: UserService) {}
   ngOnInit(): void {
+    this.inputEffect();
     imageShow('demo');
     this.form = new FormGroup({
       username: new FormControl(null, { validators: Validators.required }),

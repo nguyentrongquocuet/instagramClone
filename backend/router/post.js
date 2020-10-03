@@ -8,4 +8,6 @@ route.get("", authMiddleware, controller.getPost);
 route.get("/:id", authMiddleware, controller.getPostById);
 route.get("/like/:id", authMiddleware, controller.getLikedList);
 route.post("/like", authMiddleware, controller.addLike);
+route.post("/comment", authMiddleware, controller.addComment);
+route.get("/comment", authMiddleware, controller.getFullComment);
 module.exports = route;
