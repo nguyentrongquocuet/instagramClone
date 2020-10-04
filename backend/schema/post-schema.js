@@ -10,4 +10,4 @@ const postSchema = new Schema({
   commentcount: { type: Number, default: 0 },
   index: { type: Number, default: 0 },
 });
-module.exports = mongoose.model("Post", postSchema);
+module.exports = mongoose.model("posts", postSchema);

@@ -31,6 +31,13 @@ export class PostService {
   addComment(postId, comment) {
     return this.http.post(this.server + 'comment', { postId, comment });
   }
+  deleteComment(postId, comment, commentId) {
+    this.http
+      .delete(this.server + `comment?postId=${postId}&commentId=${commentId}`)
+      .subscribe((res) => {
+        console.log(res);
+      });
+  }
   getPost(part, postPerPart) {
     console.log('serve');
     this.http
@@ -52,5 +59,10 @@ export class PostService {
 
   getLikedUserList(postId) {
     return this.http.get<UserData[]>(this.server + `like/${postId}`);
+  }
+  getMoreComments(postId) {
+    this.http.get(this.server + `comment/${postId}`).subscribe((res) => {
+      console.log(res);
+    });
   }
 }

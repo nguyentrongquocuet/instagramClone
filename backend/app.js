@@ -8,16 +8,28 @@ const userRoute = require("./router/user");
 
 module.exports.init = () => {
   require("dotenv").config();
+  let Pusher = require("pusher");
+  let pusher = new Pusher({
+    appId: process.env.PUSHER_APP_ID,
+    key: process.env.PUSHER_APP_KEY,
+    secret: process.env.PUSHER_APP_SECRET,
+    cluster: process.env.PUSHER_APP_CLUSTER,
+    useTLS: true,
+  });
   const app = express();
   app.use(bp.json());
-  mongo
-    .connect(uri)
-    .then(() => {
-      console.log("connected to mongodb");
-    })
-    .catch(() => {
-      console.log("cannot connect to mongodb");
+  mongo.connect(uri).catch(() => {
+    console.log("cannot connect to mongodb");
+  });
+
+  mongo.connection.once("open", () => {
+    console.log("connected to mongodb");
+    const changeStream = mongo.connection.collection("posts").watch();
+    changeStream.on("change", (change) => {
+      console.log(change.operationType);
+      pusher.trigger("change", "change", change);
     });
+  });
   app.use("/images", express.static(path.join("backend/images")));
   app.use("/avatar", express.static(path.join("backend/avatar")));
   app.use((req, res, next) => {
@@ -33,14 +45,6 @@ module.exports.init = () => {
     next();
   });
 
-  let Pusher = require("pusher");
-  let pusher = new Pusher({
-    appId: process.env.PUSHER_APP_ID,
-    key: process.env.PUSHER_APP_KEY,
-    secret: process.env.PUSHER_APP_SECRET,
-    cluster: process.env.PUSHER_APP_CLUSTER,
-    useTLS: true,
-  });
   app.set("pusher", pusher);
   app.post("/pusher/auth", function (req, res) {
     console.log(req.body);

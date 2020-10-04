@@ -6,4 +6,4 @@ const User = new mongoose.Schema({
   password: { type: String, required: true },
   avatarPath: { type: String },
 });
-module.exports = mongoose.model("User", User);
+module.exports = mongoose.model("users", User);

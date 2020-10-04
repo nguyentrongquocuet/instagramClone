@@ -61,6 +61,11 @@
       <div class="comment" *ngFor="let comment of post.commentList">
         <a>{{ comment.userData.username || "loadingusername" }}</a>
         <span> {{ comment.comment }} </span>
+        <a
+          *ngIf="userData.userId === comment.userId"
+          (click)="deleteComment(post._id, comment)"
+          >Delete</a
+        >
       </div>
     </div>
     <div class="field comment--input">

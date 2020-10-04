@@ -8,7 +8,9 @@ export class Post {
   creatorId: string;
   creator: UserData;
   likeList: [{ userId: string; userData: UserData }];
-  commentList: [{ userId: string; userData: UserData; comment: string }];
+  commentList: [
+    { userId: string; userData: UserData; comment: string; id: string }
+  ];
   likecount: number;
   commentcount: number;
 }

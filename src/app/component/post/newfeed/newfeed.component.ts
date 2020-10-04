@@ -75,7 +75,55 @@ export class NewfeedComponent implements OnInit, OnDestroy {
           }
           break;
         case 'addcomment':
-          this.updateComment(data.postId, data.comment, data.userData);
+          this.updateComment(
+            1,
+            data.postId,
+            data.id,
+            data.comment,
+            data.userData
+          );
+          if (
+            this.postWithFullComment &&
+            this.postWithFullComment._id === data.postId
+          ) {
+            this.postWithFullComment.commentcount += 1;
+            this.postWithFullComment.commentList.push({
+              id: data.id,
+              userId: data.userId,
+              comment: data.comment,
+              userData: data.userData,
+            });
+          }
+          break;
+        case 'deletecomment':
+          this.updateComment(
+            -1,
+            data.postId,
+            data.id,
+            data.comment,
+            data.userData
+          );
+          if (
+            this.postWithFullComment &&
+            this.postWithFullComment._id === data.postId
+          ) {
+            this.postWithFullComment.commentcount -= 1;
+            for (
+              let j = 0;
+              j < this.postWithFullComment.commentList.length;
+              j++
+            ) {
+              if (this.postWithFullComment.commentList[j].id === data.id) {
+                this.postWithFullComment.commentList.splice(j, 1);
+                this.postWithFullComment.commentcount -= 1;
+              }
+            }
+          }
+          break;
+        case 'morecomment':
+          if (this.postWithFullComment) {
+            this.postWithFullComment.commentList.unshift(data.comment);
+          }
           break;
         case undefined:
           this.postService.getPost(this.part, this.postPerPart);
@@ -85,10 +133,8 @@ export class NewfeedComponent implements OnInit, OnDestroy {
       }
     });
   }
-  testSocket() {
-    this.http.get('http://localhost:3000/api/p0st/like').subscribe((r) => {
-      console.log(r);
-    });
+  deleteComment(postId, comment) {
+    this.postService.deleteComment(postId, comment.comment, comment.id);
   }
   addComment(post: Post, input: HTMLInputElement) {
     if (input.value.trim().length > 0) {
@@ -137,6 +183,14 @@ export class NewfeedComponent implements OnInit, OnDestroy {
             this.posts[i].isLiked = false;
           }
         }
+        if (
+          this.postWithFullComment &&
+          postId === this.postWithFullComment._id
+        ) {
+          this.postWithFullComment.isLiked = this.posts[i].isLiked;
+          this.postWithFullComment.likeList = this.posts[i].likeList;
+          this.postWithFullComment.likecount = this.posts[i].likecount;
+        }
         console.log(this.posts[i]);
       }
     }
@@ -165,42 +219,33 @@ export class NewfeedComponent implements OnInit, OnDestroy {
     }
   }
   getPostWithFullComment(post: Post) {
-    this.postWithFullComment = post;
-    post = null;
-    console.log(this.postWithFullComment);
+    this.postWithFullComment = { ...post, commentList: [] };
+    this.postService.getMoreComments(post._id);
+    console.log(this.postWithFullComment.commentList === post.commentList);
   }
-  // updatePostWithFullComment(post: Post) {
-  //   if (post && this.postWithFullComment) {
-  //     this.postWithFullComment.isLiked = post.isLiked;
-  //     this.postWithFullComment.liked = post.liked;
-  //     if (
-  //       this.postWithFullComment.commentList.totalComment !==
-  //       post.commentList.totalComment
-  //     ) {
-  //       this.getPostWithFullComment(post._id);
-  //     }
-  //   }
-  // }
-  // updateLikedUserData(post: Post) {
-  //   if (
-  //     this.likedUserData &&
-  //     this.likedUserData.postId === post._id &&
-  //     this.likedUserData.userData.length !== post.liked
-  //   ) {
-  //     this.getLikedUserList(post);
-  //   }
-  // }
 
-  updateComment(postId, comment, userData: UserData) {
+  updateComment(increase, postId, id, comment, userData: UserData) {
     console.log(postId, userData, comment);
+
     for (let i = 0; i < this.posts.length; i++) {
       if (this.posts[i]._id === postId) {
-        this.posts[i].commentList.push({
-          userId: userData.userId,
-          comment,
-          userData,
-        });
-        this.posts[i].commentcount += 1;
+        if (increase > 0) {
+          const newComment = {
+            id,
+            userId: userData.userId,
+            comment,
+            userData,
+          };
+          this.posts[i].commentList.push(newComment);
+          this.posts[i].commentcount += 1;
+        } else {
+          for (let j = 0; j < this.posts[i].commentList.length; j++) {
+            if (this.posts[i].commentList[j].id === id) {
+              this.posts[i].commentList.splice(j, 1);
+              this.posts[i].commentcount -= 1;
+            }
+          }
+        }
       }
     }
   }

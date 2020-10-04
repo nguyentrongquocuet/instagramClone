@@ -1,6 +1,5 @@
 const SocketIO = require("../config/socketconfig");
 const postSchema = require("../schema/post-schema");
-const userSchema = require("../schema/user-schema");
 const userController = require("./user-controller");
 exports.addPost = (req, res) => {
   const io = req.app.get("io");
@@ -23,7 +22,6 @@ exports.addPost = (req, res) => {
     const creatorInfo = await userController.getUserInfo(savedPost.creatorId);
     const room = `post-${savedPost._id}`;
     socket.join(room);
-    console.log(savedPost, creatorInfo); // savedPost= {...savedPost, creator: {...creatorInfo}};
     io.emit("post", {
       operation: "addpost",
       post: {
@@ -51,16 +49,19 @@ exports.getPost = (req, res) => {
       for (let post of foundPosts) {
         const room = `post-${post._id}`;
         socket.join(room);
+        let limit = 2;
         const creatorInfo = await userController.getUserInfo(post.creatorId);
         let commentList = [];
-        for (let comment of post.commentList) {
+        for (let i = post.commentcount - 1; i >= 0; i--) {
+          if (limit <= 0) break;
           const commentCreatorInfo = await userController.getUserInfo(
-            comment.userId
+            post.commentList[i].userId
           );
-          commentList.push({
-            ...comment,
+          commentList.unshift({
+            ...post.commentList[i],
             userData: commentCreatorInfo,
           });
+          limit--;
         }
 
         socket.emit("post", {
@@ -123,7 +124,6 @@ exports.addLike = async (req, res) => {
         userId: userId,
       });
     }
-    console.log(postAfterUpdate);
 
     res.status(200).json("liked");
   } catch (error) {
@@ -137,17 +137,19 @@ exports.addComment = async (req, res) => {
   const userId = req.decodedToken.token.userId;
   const comment = req.body.comment.trim();
   try {
-    await postSchema.findByIdAndUpdate(
-      postId,
+    let post = await postSchema.findByIdAndUpdate(postId);
+    await post.update(
       {
         $push: {
           commentList: {
+            id: post.index,
             userId: userId,
             comment: comment,
           },
         },
         $inc: {
           commentcount: 1,
+          index: 1,
         },
       },
       {
@@ -161,13 +163,50 @@ exports.addComment = async (req, res) => {
       comment: comment,
       userId: userId,
       userData: userData,
+      id: post.index,
     });
     res.status(200).json("added comment");
   } catch (error) {
     console.log("ERROR FROM ADD COMMENT", error);
   }
 };
-
+exports.deleteComment = async (req, res) => {
+  const userId = req.decodedToken.token.userId;
+  const postId = req.query.postId;
+  const room = `post-${postId}`;
+  const commentId = parseInt(req.query.commentId);
+  const io = req.app.get("io");
+  console.log(commentId);
+  try {
+    const postAfterUpdate = await postSchema.findOneAndUpdate(
+      { _id: postId },
+      {
+        $pull: {
+          commentList: { id: commentId, userId: userId },
+        },
+        $inc: {
+          commentcount: -1,
+        },
+      },
+      { new: true }
+    );
+    if (!postAfterUpdate) {
+      res.status(401).json("unauthenticated");
+    } else {
+      io.to(room).emit("post", {
+        operation: "deletecomment",
+        postId: postId,
+        comment: null,
+        userId: userId,
+        userData: null,
+        id: commentId,
+      });
+      res.status(200).json("deleted");
+    }
+  } catch (error) {
+    console.log("FROM DELETE COMMENT", error);
+  }
+};
 exports.getLikedList = async (req, res) => {
   console.log(req.params);
   const userId = req.decodedToken.token.userId;
@@ -192,45 +231,30 @@ exports.getLikedList = async (req, res) => {
   }
 };
 exports.getFullComment = (req, res) => {
-  getCommentList(req.params.id, -1).then((fullComment) => {
-    console.log("fullcomment", fullComment);
-    res.status(200).json({ message: "getted full comments", fullComment });
-  });
-};
-
-async function getLikedUserList(res, postId) {}
-async function getCommentList(postId, count) {
-  console.log("count laf", count);
-  let output = [];
-
-  try {
-    const commentDoc = await commentListSchema.findOne({
-      postId: postId,
-    });
-    let listSize = commentDoc.commentList.length;
-    console.log(listSize);
-    let from;
-    if (count < 0 || count > listSize) {
-      from = 0;
-    } else {
-      from = listSize - count;
-    }
-    console.log(listSize);
-    let comments = commentDoc.commentList;
-    for (let i = from; i < listSize; i++) {
-      let user = await userSchema.findById(comments[i].userId);
-      output.push({
-        userData: {
-          userId: user._id,
-          username: user.username,
-          name: user.name,
-          avatarPath: user.avatarPath,
+  console.log("getting comments");
+  const userId = req.decodedToken.token.userId;
+  const socketId = SocketIO.socketId.get(userId);
+  const socket = req.app.get("io").sockets.connected[socketId];
+  const postId = req.params.id;
+  postSchema.findById(postId).then(async (foundPost) => {
+    let commentList = [];
+    for (let i = foundPost.commentcount - 1; i >= 0; i--) {
+      const commentCreatorInfo = await userController.getUserInfo(
+        foundPost.commentList[i].userId
+      );
+      socket.emit("post", {
+        operation: "morecomment",
+        comment: {
+          ...foundPost.commentList[i],
+          userData: commentCreatorInfo,
         },
-        comment: comments[i].comment,
+      });
+      commentList.push({
+        ...foundPost.commentList[i],
+        userData: commentCreatorInfo,
       });
     }
-    return { totalComment: listSize, list: output };
-  } catch (error) {
-    console.log("ERROR IN GET COMMENT LIST", error);
-  }
-}
+
+    res.status(200).json({ message: "get comment" });
+  });
+};
