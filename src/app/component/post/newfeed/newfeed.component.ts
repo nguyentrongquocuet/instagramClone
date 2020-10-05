@@ -219,7 +219,11 @@ export class NewfeedComponent implements OnInit, OnDestroy {
     }
   }
   getPostWithFullComment(post: Post) {
-    this.postWithFullComment = { ...post, commentList: [] };
+    this.postWithFullComment = {
+      ...post,
+      commentList: [{ userData: null, userId: null, comment: null, id: null }],
+    };
+    this.postWithFullComment.commentList.splice(0, 1);
     this.postService.getMoreComments(post._id);
     console.log(this.postWithFullComment.commentList === post.commentList);
   }

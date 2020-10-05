@@ -32,7 +32,7 @@ exports.addPost = (req, res) => {
     res.status(200).json({ message: "saved" });
   });
 };
-exports.getPost = (req, res) => {
+exports.getPost = async (req, res) => {
   console.log("getting post");
   const userId = req.decodedToken.token.userId;
   const socketId = SocketIO.socketId.get(userId);

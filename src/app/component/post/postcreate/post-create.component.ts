@@ -36,7 +36,8 @@ export class PostCreateComponent implements OnInit {
     (e.target as HTMLInputElement).value = null;
   }
 
-  onAddPost() {
+  onAddPost(e: Event) {
+    (e.target as HTMLButtonElement).disabled = true;
     this.postService
       .addPost(this.form.value.title, this.form.value.image)
       .subscribe((responseData) => {

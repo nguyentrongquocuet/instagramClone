@@ -1,6 +1,10 @@
 <div (window:scroll)="scroll()" class="newfeed" style="width: 100%">
   <div class="fetching" *ngIf="fetching"></div>
-  <div *ngFor="let post of posts; index as i" class="border container--full">
+  <div
+    style="margin-bottom: 2rem"
+    *ngFor="let post of posts; index as i"
+    class="border container--full"
+  >
     <div class="field user-detail">
       <div class="avatar">
         <img class="avatar--small" [src]="post.creator.avatarPath" alt="" />
@@ -86,6 +90,19 @@
     </div>
   </div>
 </div>
+<div *ngIf="fetching" class="card" style="width: 100%">
+  <div class="box box1">
+    <div class="skeleton circle"></div>
+    <div class="skeleton sub-box box11"></div>
+  </div>
+  <div class="box box2 skeleton"></div>
+  <div class="box box3">
+    <div class="skeleton sub-box box31"></div>
+  </div>
+  <div class="box box4">
+    <div class="skeleton box box41 skeleton"></div>
+  </div>
+</div>
 <!-- fullpost -->
 <!-- //FIXME: ADD FULL POST PREVIEW -->
 <div *ngIf="postWithFullComment" class="toggle-wrapper">
@@ -162,6 +179,11 @@
             />
             <a>{{ comment.userData.username }}</a>
             <span> {{ comment.comment }} </span>
+            <a
+              *ngIf="userData.userId === comment.userId"
+              (click)="deleteComment(postWithFullComment._id, comment)"
+              >Delete</a
+            >
           </div>
         </div>
         <div class="field action">
